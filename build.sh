@@ -1,3 +1,3 @@
 #!/bin/sh -ev
 
-g++ -lboost_program_options -o para main.cpp
+g++ -std=c++17 -lboost_program_options -o para main.cpp
