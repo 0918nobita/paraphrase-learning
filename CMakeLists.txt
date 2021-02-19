@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.1)
+project(paraphrase CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
+add_executable(para main.cpp)
+target_link_libraries(para boost_program_options)

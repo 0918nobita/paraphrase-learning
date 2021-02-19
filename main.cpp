@@ -32,6 +32,9 @@ static void printUsage();
 static void printVersion();
 
 int main(int argc, char* argv[]) {
+#if DEBUG || _DEBUG
+    std::cout << "!!! THIS IS DEBUG VERSION !!!" << std::endl;
+#endif
     std::vector<std::string> args;
     Configuration config;
     auto command = parseOptions(argc, argv, args, config);
