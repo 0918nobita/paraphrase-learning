@@ -1,10 +1,19 @@
 # Paraphrase 学習用リポジトリ
 
+## ビルド
+
 ```bash
-git clone git@github.com:0918nobita/paraphrase-learning.git
-cd paraphrase-learning
-mkdir build
+mkdir -p build
 cd build
 cmake ..
+make
+```
+
+### Debug ビルド
+
+```bash
+mkdir -p build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ```
