@@ -7,21 +7,31 @@ namespace po = boost::program_options;
 
 const char *kVersion = VERSION;
 
+struct Configuration {
+    bool displayOk = true;
+    bool displayTime;
+    bool usePrompt = true;
+};
+
+/** CLI が何をすればいいのか */
 enum class Command {
     PrintUsage,
     PrintVersion,
+    /** 続けてプログラムを実行する */
     Proceed,
+    /** コマンドの特定に失敗 */
     Failure,
 };
 
-static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args);
+static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args, Configuration& config);
 
 static void printUsage();
 static void printVersion();
 
 int main(int argc, char* argv[]) {
     std::vector<std::string> args;
-    auto command = parseOptions(argc, argv, args);
+    Configuration config;
+    auto command = parseOptions(argc, argv, args, config);
 
     switch (command) {
         case Command::Failure:
@@ -45,7 +55,7 @@ int main(int argc, char* argv[]) {
 }
 
 /** コマンドライン引数をパースする */
-static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args) {
+static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args, Configuration& config) {
     po::options_description description("options");
     description.add_options()
         ("help,h",    "print help.")
@@ -75,6 +85,11 @@ static Command parseOptions(int argc, char* argv[], std::vector<std::string>& ar
 
     if (vm.count("help")) return Command::PrintUsage;
     if (vm.count("version")) return Command::PrintVersion;
+
+    if (vm.count("time")) config.displayTime = true;
+    if (vm.count("noprompt")) config.usePrompt = false;
+    if (vm.count("nook")) config.displayOk = false;
+    if (vm.count("quiet")) config.usePrompt = config.displayOk = false;
 
     return Command::Proceed;
 }
