@@ -10,6 +10,9 @@ const char *kVersion = VERSION;
 struct Configuration {
     bool displayOk = true;
     bool displayTime;
+    bool evalAndExit;
+    unsigned int numCores;
+    std::string strToEval;
     bool usePrompt = true;
 };
 
@@ -90,6 +93,19 @@ static Command parseOptions(int argc, char* argv[], std::vector<std::string>& ar
     if (vm.count("noprompt")) config.usePrompt = false;
     if (vm.count("nook")) config.displayOk = false;
     if (vm.count("quiet")) config.usePrompt = config.displayOk = false;
+    if (vm.count("thread")) {
+        auto n = vm["thread"].as<int>();
+        if (n < 0) {
+            std::cerr << "The value of --thread argument should be a positive integer" << std::endl;
+            return Command::Failure;
+        }
+        config.numCores = n;
+    }
+    if (vm.count("eval")) config.strToEval = vm["eval"].as<std::string>();
+    if (vm.count("eval-and-exit")) {
+        config.strToEval = vm["eval-and-exit"].as<std::string>();
+        config.evalAndExit = true;
+    }
 
     return Command::Proceed;
 }
