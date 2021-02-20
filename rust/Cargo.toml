@@ -1,0 +1,8 @@
+[package]
+name = "para"
+version = "0.1.0"
+description = "The Paraphrase programming language"
+authors = ["0918nobita <nobita.0918@gmail.com>"]
+edition = "2018"
+
+[dependencies]
