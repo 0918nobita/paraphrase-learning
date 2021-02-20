@@ -81,11 +81,8 @@ static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept {
             po::parse_command_line(argc, argv, description);
         po::store(parseResult, vm);
         po::notify(vm);
-
-        for (auto const& str : po::collect_unrecognized(
-                 parseResult.options, po::include_positional)) {
-            result.args.push_back(str);
-        }
+        result.args = po::collect_unrecognized(parseResult.options,
+                                               po::include_positional);
     } catch (const po::error& e) {
         std::cerr << e.what() << std::endl << description << std::endl;
         std::exit(EXIT_FAILURE);
