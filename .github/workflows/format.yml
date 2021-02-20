@@ -1,0 +1,19 @@
+name: Format
+
+on: push
+
+jobs:
+  format:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+        working-directory: cpp
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install clang-format
+        run: |
+          sudo apt update
+          sudo apt install clang-format
+      - name: Execute clang-format
+        run: clang-format --dry-run --Werror --sort-includes=false *.cpp

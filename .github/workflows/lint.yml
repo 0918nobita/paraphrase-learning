@@ -1,0 +1,20 @@
+name: Lint
+
+on: push
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+        working-directory: cpp
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install cpplint
+        run: pip install cpplint
+      - name: Execute cpplint
+        run: cpplint --recursive --exclude=build --verbose=5 .
