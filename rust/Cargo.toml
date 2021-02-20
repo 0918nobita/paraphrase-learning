@@ -6,3 +6,4 @@ authors = ["0918nobita <nobita.0918@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+clap = "3.0.0-beta.2"
