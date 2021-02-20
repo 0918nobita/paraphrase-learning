@@ -16,33 +16,31 @@ struct Configuration {
     bool usePrompt = true;
 };
 
-/** CLI が何をすればいいのか */
 enum class Command {
+    Proceed,
     PrintUsage,
     PrintVersion,
-    /** 続けてプログラムを実行する */
-    Proceed,
-    /** コマンドの特定に失敗 */
-    Failure,
 };
 
-static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args, Configuration& config);
+struct ParseResult {
+    std::vector<std::string> args;
+    Command cmd;
+    Configuration config;
+};
 
-static void printUsage();
-static void printVersion();
+static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept;
+
+static void printUsage() noexcept;
+static void printVersion() noexcept;
 
 int main(int argc, char* argv[]) {
 #if DEBUG || _DEBUG
     std::cout << "!!! THIS IS DEBUG VERSION !!!" << std::endl;
 #endif
-    std::vector<std::string> args;
-    Configuration config;
-    auto command = parseOptions(argc, argv, args, config);
+    ParseResult result;
+    parseOptions(argc, argv, result);
 
-    switch (command) {
-        case Command::Failure:
-            return EXIT_FAILURE;
-
+    switch (result.cmd) {
         case Command::PrintUsage:
             printUsage();
             break;
@@ -52,8 +50,8 @@ int main(int argc, char* argv[]) {
             break;
 
         case Command::Proceed:
-            for (size_t i = 0; i < args.size(); i++) {
-                std::cout << args[i] << std::endl;
+            for (size_t i = 0; i < result.args.size(); i++) {
+                std::cout << result.args[i] << std::endl;
             }
     }
 
@@ -61,7 +59,7 @@ int main(int argc, char* argv[]) {
 }
 
 /** コマンドライン引数をパースする */
-static Command parseOptions(int argc, char* argv[], std::vector<std::string>& args, Configuration& config) {
+static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept {
     po::options_description description("options");
     description.add_options()
         ("help,h",    "print help.")
@@ -82,41 +80,46 @@ static Command parseOptions(int argc, char* argv[], std::vector<std::string>& ar
         po::notify(vm);
 
         for (auto const& str : po::collect_unrecognized(parseResult.options, po::include_positional)) {
-            args.push_back(str);
+            result.args.push_back(str);
         }
     } catch(const po::error& e) {
         std::cerr << e.what() << std::endl << description << std::endl;
-        return Command::Failure;
+        std::exit(EXIT_FAILURE);
     }
 
-    if (vm.count("help")) return Command::PrintUsage;
-    if (vm.count("version")) return Command::PrintVersion;
+    if (vm.count("help")) {
+        result.cmd = Command::PrintUsage;
+        return;
+    }
 
-    if (vm.count("time")) config.displayTime = true;
-    if (vm.count("noprompt")) config.usePrompt = false;
-    if (vm.count("nook")) config.displayOk = false;
-    if (vm.count("quiet")) config.usePrompt = config.displayOk = false;
+    if (vm.count("version")) {
+        result.cmd = Command::PrintVersion;
+        return;
+    }
+
+    if (vm.count("time")) result.config.displayTime = true;
+    if (vm.count("noprompt")) result.config.usePrompt = false;
+    if (vm.count("nook")) result.config.displayOk = false;
+    if (vm.count("quiet")) result.config.usePrompt = result.config.displayOk = false;
     if (vm.count("thread")) {
         auto n = vm["thread"].as<int>();
         if (n < 0) {
             std::cerr << "The value of --thread argument should be a positive integer" << std::endl;
-            return Command::Failure;
+            std::exit(EXIT_FAILURE);
         }
-        config.numCores = n;
+        result.config.numCores = n;
     }
-    if (vm.count("eval")) config.strToEval = vm["eval"].as<std::string>();
+    if (vm.count("eval")) result.config.strToEval = vm["eval"].as<std::string>();
     if (vm.count("eval-and-exit")) {
-        config.strToEval = vm["eval-and-exit"].as<std::string>();
-        config.evalAndExit = true;
+        result.config.strToEval = vm["eval-and-exit"].as<std::string>();
+        result.config.evalAndExit = true;
     }
-
-    return Command::Proceed;
 }
 
-static void printUsage() {
+static void printUsage() noexcept {
     std::cout << "Usage: para [-ehknqtv] [--thread] [program-file] [program-code]" << std::endl;
 }
 
-static void printVersion() {
+static void printVersion() noexcept {
     std::cout << "Paraphrase " << kVersion << std::endl;
 }
