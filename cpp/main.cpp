@@ -1,7 +1,9 @@
+// Copyright 2021 Kodai Matsumoto
+
 #define VERSION "0.94.0"
 
-#include <boost/program_options.hpp>
 #include <iostream>
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
@@ -28,7 +30,7 @@ struct ParseResult {
     Configuration config;
 };
 
-static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept;
+static void parseOptions(int argc, char* argv[], ParseResult* result) noexcept;
 
 static void printUsage() noexcept;
 static void printVersion() noexcept;
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
     std::cout << "!!! THIS IS DEBUG VERSION !!!" << std::endl;
 #endif
     ParseResult result;
-    parseOptions(argc, argv, result);
+    parseOptions(argc, argv, &result);
 
     switch (result.cmd) {
         case Command::PrintUsage:
@@ -59,16 +61,23 @@ int main(int argc, char* argv[]) {
 }
 
 /** コマンドライン引数をパースする */
-static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept {
+static void parseOptions(int argc, char* argv[], ParseResult* result) noexcept {
     po::options_description description("options");
     // clang-format off
     description.add_options()
         ("help,h",    "print help.")
         ("version,v", "print version info.")
         ("quiet,q",   "quiet mode (equivalent to -nk).")
-        ("thread",          po::value<int>(), "set maximum thread (ex: --thread 8).")
-        ("eval,e",          po::value<std::string>(), "eval parameter.")
-        ("eval-and-exit,E", po::value<std::string>(), "eval and exit (for one liner).")
+        (
+            "thread",
+            po::value<int>(), "set maximum thread (ex: --thread 8)."
+        )
+        ("eval,e", po::value<std::string>(), "eval parameter.")
+        (
+            "eval-and-exit,E",
+            po::value<std::string>(),
+            "eval and exit (for one liner)."
+        )
         ("noprompt,n", "suppress prompt.")
         ("nook,k", "suppress 'ok'.")
         ("time,k", "display spent time.");
@@ -81,28 +90,28 @@ static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept {
             po::parse_command_line(argc, argv, description);
         po::store(parseResult, vm);
         po::notify(vm);
-        result.args = po::collect_unrecognized(parseResult.options,
-                                               po::include_positional);
+        result->args = po::collect_unrecognized(parseResult.options,
+                                                po::include_positional);
     } catch (const po::error& e) {
         std::cerr << e.what() << std::endl << description << std::endl;
         std::exit(EXIT_FAILURE);
     }
 
     if (vm.count("help")) {
-        result.cmd = Command::PrintUsage;
+        result->cmd = Command::PrintUsage;
         return;
     }
 
     if (vm.count("version")) {
-        result.cmd = Command::PrintVersion;
+        result->cmd = Command::PrintVersion;
         return;
     }
 
-    if (vm.count("time")) result.config.displayTime = true;
-    if (vm.count("noprompt")) result.config.usePrompt = false;
-    if (vm.count("nook")) result.config.displayOk = false;
+    if (vm.count("time")) result->config.displayTime = true;
+    if (vm.count("noprompt")) result->config.usePrompt = false;
+    if (vm.count("nook")) result->config.displayOk = false;
     if (vm.count("quiet"))
-        result.config.usePrompt = result.config.displayOk = false;
+        result->config.usePrompt = result->config.displayOk = false;
     if (vm.count("thread")) {
         auto n = vm["thread"].as<int>();
         if (n < 0) {
@@ -111,13 +120,13 @@ static void parseOptions(int argc, char* argv[], ParseResult& result) noexcept {
                 << std::endl;
             std::exit(EXIT_FAILURE);
         }
-        result.config.numCores = n;
+        result->config.numCores = n;
     }
     if (vm.count("eval"))
-        result.config.strToEval = vm["eval"].as<std::string>();
+        result->config.strToEval = vm["eval"].as<std::string>();
     if (vm.count("eval-and-exit")) {
-        result.config.strToEval = vm["eval-and-exit"].as<std::string>();
-        result.config.evalAndExit = true;
+        result->config.strToEval = vm["eval-and-exit"].as<std::string>();
+        result->config.evalAndExit = true;
     }
 }
 
